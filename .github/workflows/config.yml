@@ -1,0 +1,41 @@
+name: Build & Check
+
+on:
+  # Run on all pushes to main and all pull requests targeting main.
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository (with submodules)
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'  # This handles "git submodule sync && git submodule update --init"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'  # or whichever version you prefer
+
+      - name: Install html-proofer
+        run: gem install html-proofer
+
+      - name: Set up Hugo (v0.62)
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.62.0'
+
+      - name: Build site
+        run: hugo --source=exampleSite -v --gc
+
+      - name: Run html-proofer
+        run: |
+          htmlproofer exampleSite/public \
+            --check-html \
+            --allow-hash-href \
+            --empty-alt-ignore \
+            --disable-external
